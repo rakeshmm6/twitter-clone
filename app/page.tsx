@@ -1,9 +1,14 @@
-
+'use client';
 import {FaXTwitter} from 'react-icons/fa6';
 import {BiHomeHeart, BiListUl, BiSearch, BiSolidBell, BiSolidBookmark, BiUser} from 'react-icons/bi';
 import {GoMail} from 'react-icons/go';
 import { Inter } from 'next/font/google';
 import FeedCard from '@/components/FeedCard/page';
+import{ CredentialResponse, GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
+import { useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { graphqlClient } from '@/clients/api';
+import { verifyUserGoogleTokenQuery } from '@/graphql/query/user';
 
 const inter= Inter({subsets: ["latin"]});
 interface TwitterSideBarButton{
@@ -36,6 +41,21 @@ const sideBarItems: TwitterSideBarButton[] = [{
 }]
 
 export default function Home() {
+
+  const handleLoginWithGoogle =  useCallback(
+    async(cred:CredentialResponse) => {
+      const googleToken = cred.credential;
+      if(!googleToken) return toast.error(`Google token not found`);
+
+      const{verifyGoogleToken} = await graphqlClient.request(
+        verifyUserGoogleTokenQuery,{token:googleToken});
+
+      toast.success(`Verified Success`);
+      console.log(verifyGoogleToken);
+       
+
+  },[]);
+
   return (
     <div className={inter.className}>
       <div className="grid grid-cols-12 h-screen w-screen px-56">
@@ -66,9 +86,20 @@ export default function Home() {
         <FeedCard/>
         
       </div>
-      <div className="col-span-3"></div>
+      <div className="col-span-3 p-5">
+        <div className=" p-5 bg-slate-700 rounded-lg">
+          <h1 className="my-2 text-xl">New to Twitter ?</h1>
+        <GoogleOAuthProvider clientId="618467461016-9c5naj4odr1br84s7rbdildi35ti0q7u.apps.googleusercontent.com">
+        <GoogleLogin onSuccess={(cred) => (handleLoginWithGoogle)}/>
+        </GoogleOAuthProvider>
+        </div>
+      </div>
       </div>
       </div>
     
   );  
 }
+// function usecallback(arg0: (CredentialResponse: any) => void, arg1: never[]) {
+//   throw new Error('Function not implemented.');
+// }
+
